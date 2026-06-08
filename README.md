@@ -14,9 +14,32 @@ Example Android application demonstrating how to integrate the `tradeable-androi
 
 ## Setup
 
-### 1. Add the AAR
+### 1. Clone and Build Wrapper (Git-based)
 
-Copy `tradeable-android-wrapper.aar` to the `app/libs/` directory.
+This integration app expects the wrapper at `../tradeable_android_wrapper`.
+
+Default wrapper git source:
+
+https://github.com/deepakgrandhi/tradeable_android_wrapper.git
+
+Run:
+
+```bash
+./setup_wrapper.sh
+```
+
+This command will:
+- Clone the wrapper repo if missing
+- Build Flutter artifacts and wrapper AAR
+- Copy `tradeable-android-wrapper.aar` into `app/libs/`
+
+You can override defaults with env vars:
+
+```bash
+TRADEABLE_WRAPPER_GIT_URL=https://github.com/<your-org>/<your-wrapper>.git \
+TRADEABLE_WRAPPER_DIR=../custom-wrapper-path \
+./setup_wrapper.sh
+```
 
 ### 2. Configure Credentials
 
@@ -120,7 +143,6 @@ implementation("androidx.activity:activity-compose:1.8.2")
 implementation(platform("androidx.compose:compose-bom:2024.02.00"))
 implementation("androidx.compose.ui:ui")
 implementation("androidx.compose.material3:material3")
-```
 
 ## License
 
