@@ -59,7 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tradeable.sdk.config.TradeablePageParams
 import com.tradeable.sdk.core.TradeableSDK
-import com.tradeable.sdk.ui.TradeableFlutterView
 import com.tradeable.sdk.ui.DisplayMode
 import com.tradeable.sdk.ui.TradeableFlutterActivity
 import com.tradeable.sdk.android.wrapper.FlutterBridge
@@ -189,7 +188,7 @@ fun MainScreen() {
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         // Simplified API matching iOS
-                        TradeableFlutterView(
+                        TradeableFlutterWidget(
                             mode = DisplayMode.DIRECT,
                             width = 320.dp,
                             height = 220.dp,
@@ -212,7 +211,7 @@ fun MainScreen() {
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         // Simplified API matching iOS
-                        TradeableFlutterView(
+                        TradeableFlutterWidget(
                             mode = DisplayMode.CARD_FLIP,
                             width = 320.dp,
                             height = 220.dp,
@@ -237,7 +236,7 @@ fun MainScreen() {
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         // Simplified API matching iOS
-                        TradeableFlutterView(
+                        TradeableFlutterWidget(
                             mode = DisplayMode.FULLSCREEN,
                             data = mapOf("text" to "Open Fullscreen"),
                             topicId = 6,
@@ -295,7 +294,7 @@ fun MainScreen() {
                         .fillMaxHeight()
                         .background(Color.White)
                 ) {
-                    TradeableFlutterView(
+                    TradeableFlutterWidget(
                         mode = DisplayMode.SIDE_DRAWER,
                         width = 360.dp,
                         height = 720.dp,
@@ -448,7 +447,7 @@ private fun CardBack(card: DemoCard, onFlipClick: () -> Unit) {
         // This will show the actual Flutter widget from the SDK
         // ============================================================
         /*
-        TradeableFlutterView(
+        TradeableFlutterWidget(
             height = 160.dp,
             width = 280.dp,
             type = card.flutterType,
