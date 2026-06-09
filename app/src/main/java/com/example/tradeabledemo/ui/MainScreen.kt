@@ -1,6 +1,7 @@
 package com.example.tradeabledemo.ui
 
 import android.app.Activity
+import android.content.Intent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -19,13 +20,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.FlipCameraAndroid
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Card
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -42,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,8 +59,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tradeable.sdk.config.TradeablePageParams
 import com.tradeable.sdk.core.TradeableSDK
-import com.tradeable.sdk.ui.TradeableFlutterView
 import com.tradeable.sdk.ui.DisplayMode
+import com.tradeable.sdk.ui.TradeableFlutterActivity
+import com.tradeable.sdk.android.wrapper.FlutterBridge
+import androidx.compose.foundation.layout.fillMaxHeight
 
 data class DemoCard(
     val id: String,
@@ -70,8 +77,45 @@ data class DemoCard(
 fun MainScreen() {
     val context = LocalContext.current
     val activity = context as? Activity
+    val bridge = remember { FlutterBridge.getInstance(context) }
     val isSDKInitialized by TradeableSDK.isInitialized.collectAsState()
     var isCardFlipped by remember { mutableStateOf(false) }
+    var showNativeDrawer by remember { mutableStateOf(false) }
+    val sideDrawerPageId by remember { mutableStateOf(6) }
+
+    DisposableEffect(Unit) {
+        bridge.setupDataHandler { payload ->
+            val action = payload["action"] as? String ?: return@setupDataHandler
+            activity?.runOnUiThread {
+                showNativeDrawer = false
+
+                when (action) {
+                    "openTopic" -> {
+                        val topicId = (payload["topicId"] as? Int) ?: 0
+                        if (topicId > 0) {
+                            val intent = Intent(context, TradeableFlutterActivity::class.java).apply {
+                                putExtra("mode", "fullscreen")
+                                putExtra("text", payload["title"] as? String ?: "Topic Detail")
+                                putExtra("topicId", topicId)
+                            }
+                            context.startActivity(intent)
+                        }
+                    }
+                    "openDashboard" -> {
+                        val intent = Intent(context, TradeableFlutterActivity::class.java).apply {
+                            putExtra("mode", "dashboard")
+                            putExtra("text", payload["title"] as? String ?: "Learn Dashboard")
+                        }
+                        context.startActivity(intent)
+                    }
+                }
+            }
+        }
+
+        onDispose {
+            bridge.setupDataHandler(null)
+        }
+    }
     
     val cards = remember {
         listOf(
@@ -116,16 +160,21 @@ fun MainScreen() {
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            SDKStatusBanner(isInitialized = isSDKInitialized)
-            
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
+                SDKStatusBanner(isInitialized = isSDKInitialized)
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                 // Section 1: Direct Flutter Widget Display
                 item(key = "flutter_direct") {
                     Column(
@@ -139,7 +188,7 @@ fun MainScreen() {
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         // Simplified API matching iOS
-                        TradeableFlutterView(
+                        TradeableFlutterWidget(
                             mode = DisplayMode.DIRECT,
                             width = 320.dp,
                             height = 220.dp,
@@ -162,7 +211,7 @@ fun MainScreen() {
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         // Simplified API matching iOS
-                        TradeableFlutterView(
+                        TradeableFlutterWidget(
                             mode = DisplayMode.CARD_FLIP,
                             width = 320.dp,
                             height = 220.dp,
@@ -187,12 +236,30 @@ fun MainScreen() {
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
                         // Simplified API matching iOS
-                        TradeableFlutterView(
+                        TradeableFlutterWidget(
                             mode = DisplayMode.FULLSCREEN,
                             data = mapOf("text" to "Open Fullscreen"),
                             topicId = 6,
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Button(
+                            onClick = {
+                                showNativeDrawer = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Menu,
+                                contentDescription = "Open Side Drawer",
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text("Open Tradeable Side Drawer")
+                        }
                     }
                 }
                 
@@ -208,6 +275,34 @@ fun MainScreen() {
                 
                 items(cards, key = { it.id }) { card ->
                     FlippableCard(card = card)
+                }
+            }
+            }
+
+            if (showNativeDrawer) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.25f))
+                        .clickable { showNativeDrawer = false }
+                )
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .fillMaxWidth(0.9f)
+                        .fillMaxHeight()
+                        .background(Color.White)
+                ) {
+                    TradeableFlutterWidget(
+                        mode = DisplayMode.SIDE_DRAWER,
+                        width = 360.dp,
+                        height = 720.dp,
+                        data = mapOf("text" to "Native Side Drawer"),
+                        pageId = sideDrawerPageId,
+                        onCloseSideDrawer = { showNativeDrawer = false },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
         }
@@ -352,7 +447,7 @@ private fun CardBack(card: DemoCard, onFlipClick: () -> Unit) {
         // This will show the actual Flutter widget from the SDK
         // ============================================================
         /*
-        TradeableFlutterView(
+        TradeableFlutterWidget(
             height = 160.dp,
             width = 280.dp,
             type = card.flutterType,

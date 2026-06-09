@@ -7,6 +7,7 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
+    val tradeableWrapperDir = file("../tradeable_android_wrapper")
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
@@ -18,7 +19,11 @@ dependencyResolutionManagement {
         }
         // Flutter module repository (built by wrapper build script)
         maven {
-            url = uri("../tradeable-android-wrapper/.flutter_sdk/build/host/outputs/repo")
+            url = uri(tradeableWrapperDir.resolve(".flutter_sdk/build/host/outputs/repo"))
+        }
+        // Fallback local repo copied by tradeable_android_wrapper/build.sh
+        maven {
+            url = uri(tradeableWrapperDir.resolve("tradeable-sdk/libs"))
         }
     }
 }
