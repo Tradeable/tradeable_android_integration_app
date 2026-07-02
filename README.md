@@ -2,6 +2,9 @@
 
 Example Android application demonstrating how to integrate the `tradeable-android-wrapper` AAR.
 
+## changelog
+- added user progress widget
+
 ## Features Demonstrated
 
 - ✅ SDK initialization in Application class
@@ -13,6 +16,7 @@ Example Android application demonstrating how to integrate the `tradeable-androi
 - ✅ Callback handling from Flutter
 - ✅ Native side drawer + Flutter drawer content
 - ✅ Native fullscreen topic/dashboard content launched from Flutter drawer actions
+- ✅ User Progress Widget
 
 ## Setup
 
@@ -99,21 +103,6 @@ app/src/main/java/com/example/tradeabledemo/
 - **FAB**: Opens the Tradeable dashboard
 - **Side Drawer Button**: Opens native side drawer that hosts Flutter drawer content
 
-### New Views Added
-
-This integration app now demonstrates the new wrapper display modes:
-
-- `DisplayMode.SIDE_DRAWER`
-- `DisplayMode.FULLSCREEN_CONTENT`
-- `DisplayMode.DASHBOARD_CONTENT`
-
-Flow implemented in app:
-
-1. Native opens drawer using `DisplayMode.SIDE_DRAWER`.
-2. Flutter drawer sends an action over navigation channel (`sendData`).
-3. Native closes drawer and opens a new fullscreen screen.
-4. Fullscreen content is rendered via `DisplayMode.FULLSCREEN_CONTENT` or `DisplayMode.DASHBOARD_CONTENT`.
-
 ## Usage
 
 Use the wrapper composable directly (or the alias `TradeableFlutterWidget`) from your screen.
@@ -182,6 +171,72 @@ bridge.setupDataHandler { payload ->
     }
 }
 ```
+
+# User Progress
+```kotlin
+TradeableFlutterWidget(
+    mode = DisplayMode.USER_PROGRESS,
+    width = 390.dp,
+    height = 420.dp
+)
+```
+
+| Action              | Required Data       | Description                      |
+| ------------------- | ------------------- | -------------------------------- |
+| `openTopic`         | `topicId`, `title`  | Opens the Topic Details screen.  |
+| `openCourseDetails` | `courseId`, `title` | Opens the Course Details screen. |
+| `openDashboard`     | `title`             | Opens the Learn Dashboard.       |
+| `openUserProgress`  | `title`             | Opens the User Progress screen.  |
+
+
+Example:
+
+bridge.registerDataHandler(ownerKey) { payload ->
+    when (payload["action"]) {
+        "openTopic" -> { ... }
+        "openCourseDetails" -> { ... }
+        "openDashboard" -> { ... }
+        "openUserProgress" -> { ... }
+    }
+}
+
+-> Managing Active Screen
+    If multiple screens register navigation handlers, activate the currently visible screen when it resumes.
+
+- bridge.activateOwner(ownerKey)
+
+-> When the screen is destroyed, remove its handlers.
+
+- bridge.clearOwnerHandlers(ownerKey)
+
+
+### Route Payloads:
+
+# Open Topic
+{
+  "action": "openTopic",
+  "topicId": 10,
+  "title": "Topic Detail"
+}
+
+# Open Course Details
+{
+  "action": "openCourseDetails",
+  "courseId": 5,
+  "title": "Course Details"
+}
+
+# Open Dashboard
+{
+  "action": "openDashboard",
+  "title": "Learn Dashboard"
+}
+
+# Open User Progress
+{
+  "action": "openUserProgress",
+  "title": "My Activity"
+}
 
 ## Method Channels for Integration Apps
 

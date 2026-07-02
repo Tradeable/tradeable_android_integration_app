@@ -21,6 +21,7 @@ fun TradeableFlutterWidget(
     data: Map<String, Any> = emptyMap(),
     topicId: Int? = null,
     pageId: Int? = null,
+    courseId: Int? = null,
     onCloseSideDrawer: (() -> Unit)? = null,
     onCloseFullscreen: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -32,6 +33,7 @@ fun TradeableFlutterWidget(
         data = data,
         topicId = topicId,
         pageId = pageId,
+        courseId = courseId,
         onCloseSideDrawer = onCloseSideDrawer,
         onCloseFullscreen = onCloseFullscreen,
         modifier = modifier
